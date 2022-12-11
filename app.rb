@@ -2,6 +2,7 @@
 
 require "./lib/ast"
 require "./lib/codegen"
+require "./lib/parse"
 
 class Minicomp
   def initialize(fn)
@@ -9,7 +10,10 @@ class Minicomp
   end
 
   # expr -> asm source
-  def compile(expr)
+  def compile(source)
+    parser = Parser.new(source)
+    expr = parser.parse
+
     visitor = Codgen::StackOpsVisitor.new
     expr.accept(visitor)
 

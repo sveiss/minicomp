@@ -30,21 +30,11 @@ class TestHarness
     end
   end
 
-  def tc1
-    # expect(42, "42")
-    expect(42, IVal.new(val: 42))
-  end
-
-  def tc2
-    # expect(64, "42 + 22")
-    expect(64, Expr.new(left: IVal.new(val: 42), op: "+", right: IVal.new(val: 22)))
-  end
-
-  def tc3 = expect(20, Expr.new(left: IVal.new(val: 40), op: "/", right: IVal.new(val: 2)))
-  def tc4 = expect(50, Expr.new(left: IVal.new(val: 55), op: "-", right: IVal.new(val: 5)))
-
-  def tc5 = expect(900, Expr.new(left: IVal.new(val: 10), op: "*", right:
-    Expr.new(left: IVal.new(val: 45), op: "*", right: IVal.new(val: 2))))
+  def tc1 = expect(42, "42")
+  def tc2 = expect(64, "42 + 22")
+  def tc3 = expect(20, "40 / 2")
+  def tc4 = expect(50, "55 - 5")
+  def tc5 = expect(900, "10 * (45 * 2)")
 
   private
 
