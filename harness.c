@@ -9,7 +9,7 @@ void run_test(int (*sut)(), int expected, const char *name)
     int actual = sut();
     if (actual != expected)
     {
-        printf("F: %s\tE: %d\tA: %d\n", name, actual, expected);
+        printf("F: %s\tE: %d\tA: %d\n", name, expected, actual);
         out_status = 1;
     }
 }
@@ -17,5 +17,7 @@ void run_test(int (*sut)(), int expected, const char *name)
 int main()
 {
     run_tests();
+    printf("done!\n");
+
     return out_status;
 }
