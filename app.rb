@@ -12,21 +12,35 @@ class Minicomp
   # expr -> asm source
   def compile(source)
     parser = Parser.new(source)
-    expr = parser.parse[0]
 
-    visitor1 = Codgen::ExprToStackOpsVisitor.new
-    expr.accept(visitor1)
-    stack_ops = visitor1.ops
+    statement_list = parser.parse
+    stack_ops = generate_stack_ops(statement_list)
+    asm_ops = generate_asm_ops(stack_ops)
 
-    visitor2 = Codgen::StackOpsToAsmVisitor.new
-    stack_ops.each { _1.accept(visitor2) }
-
-    asm_ops = visitor2.ops
     generate_asm(asm_ops)
   end
 
+  def generate_stack_ops(statement_list)
+    stack_ops = []
+
+    statement_list.each do |statement|
+      visitor = Codgen::StatementToStackOpsVisitor.new
+      statement.accept(visitor)
+      stack_ops += visitor.ops
+    end
+
+    stack_ops
+  end
+
+  def generate_asm_ops(stack_ops)
+    visitor = Codgen::StackOpsToAsmVisitor.new
+    stack_ops.each { _1.accept(visitor) }
+
+    visitor.ops
+  end
+
   def generate_asm(stack_ops)
-    template = ERB.new(<<~EOF, trim_mode: "%>")
+    template = ERB.new(<<~EOF, trim_mode: "%-")
       /* GENERATED AT <%= Time.now %> */
 
       .text
@@ -34,11 +48,9 @@ class Minicomp
       .global _<%= @fn %>
 
       _<%= @fn %>:
-      <% stack_ops.each do |op| %>
+      <% stack_ops.each do |op| -%>
         <%= op %>
-      <% end %>
-        ldr x0, [sp]
-        add sp, sp, #16
+      <% end -%>
         ret
     EOF
 

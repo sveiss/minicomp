@@ -33,7 +33,7 @@ class Parser
   def statement
     ret = expr
     expect(";")
-    ret
+    AST::ExprStatement.new(expr: ret)
   end
 
   def expr

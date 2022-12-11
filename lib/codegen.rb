@@ -3,11 +3,17 @@
 require "./lib/visitors"
 
 module Codgen
-  class ExprToStackOpsVisitor
+  class StatementToStackOpsVisitor
     attr_reader :ops
 
     def initialize
       @ops = []
+    end
+
+    def visit_expr_statement(node)
+      node.expr.accept(self)
+
+      @ops << StackOps::PopAsReturnValue.new
     end
 
     def visit_expr(node)
@@ -45,7 +51,7 @@ module Codgen
         "#{EVAL_OPCODES[node.op]} x9, x10, x9",
         "sub sp, sp, #16",
         "str x9, [sp]",
-      ].map { "#{_1}\n" }
+      ]
     end
 
     def visit_push(node)
@@ -53,7 +59,14 @@ module Codgen
         "sub sp, sp, #16",      # increment sp
         "mov x9, ##{node.val}", # load immediate
         "str x9, [sp]",         # write to stack
-      ].map { "#{_1}\n" }
+      ]
+    end
+
+    def visit_pop_as_return_value(node)
+      @ops += [
+        "ldr x0, [sp]",
+        "add sp, sp, #16",
+      ]
     end
   end
 
@@ -70,6 +83,8 @@ module Codgen
         @val = val
       end
     end
+
+    class PopAsReturnValue < Base; end
 
     class Arithmetic < Base
       attr_reader :op

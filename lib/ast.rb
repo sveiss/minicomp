@@ -7,6 +7,17 @@ module AST
     include AcceptsVisitorMixin
   end
 
+  class ExprStatement < Node
+    attr_reader :expr
+
+    def initialize(expr:)
+      super()
+      @expr = expr
+    end
+
+    def to_s = "#{expr} ;\n"
+  end
+
   class Expr < Node
     attr_reader :left, :right, :op
 
