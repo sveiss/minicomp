@@ -30,11 +30,11 @@ class TestHarness
     end
   end
 
-  def tc1 = expect(42, "42")
-  def tc2 = expect(64, "42 + 22")
-  def tc3 = expect(20, "40 / 2")
-  def tc4 = expect(50, "55 - 5")
-  def tc5 = expect(900, "10 * (45 * 2)")
+  def tc1 = expect(42, "42;")
+  def tc2 = expect(64, "42 + 22;")
+  def tc3 = expect(20, "40 / 2;")
+  def tc4 = expect(50, "55 - 5;")
+  def tc5 = expect(900, "10 * (45 * 2);")
 
   private
 

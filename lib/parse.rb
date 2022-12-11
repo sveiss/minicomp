@@ -16,10 +16,46 @@ class Parser
   OP = %r{[+*/-]}
 
   def parse
-    expr
+    statement_list
   end
 
   private
+
+  # production rules
+
+  def statement_list
+    statements = []
+
+    statements << statement until eos?
+    statements
+  end
+
+  def statement
+    ret = expr
+    expect(";")
+    ret
+  end
+
+  def expr
+    left = nil
+    if scan(OPEN_PAREN)
+      left = expr
+      expect(CLOSE_PAREN)
+    else
+      left = AST::IVal.new(val: scan(INTEGER).to_i)
+    end
+
+    if match?(OP)
+      op = scan(OP)
+      right = expr
+
+      AST::Expr.new(left: left, op: op, right: right)
+    else
+      left
+    end
+  end
+
+  # scanner helpers
 
   def scan(needle)
     consume_whitespace
@@ -35,28 +71,14 @@ class Parser
     @s.scan(/\s+/)
   end
 
-  def require(needle)
+  def expect(needle)
     match = scan(needle)
 
     raise ScannerError if match.nil?
   end
 
-  def expr
-    left = nil
-    if scan(OPEN_PAREN)
-      left = expr
-      require(CLOSE_PAREN)
-    else
-      left = AST::IVal.new(val: scan(INTEGER).to_i)
-    end
-
-    if match?(OP)
-      op = scan(OP)
-      right = expr
-
-      AST::Expr.new(left: left, op: op, right: right)
-    else
-      left
-    end
+  def eos?
+    consume_whitespace
+    @s.eos?
   end
 end

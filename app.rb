@@ -12,7 +12,7 @@ class Minicomp
   # expr -> asm source
   def compile(source)
     parser = Parser.new(source)
-    expr = parser.parse
+    expr = parser.parse[0]
 
     visitor1 = Codgen::ExprToStackOpsVisitor.new
     expr.accept(visitor1)
