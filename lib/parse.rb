@@ -10,7 +10,7 @@ class Parser
     @s = StringScanner.new(input)
   end
 
-  DIGIT = /\d+/
+  INTEGER = /\d+/
   OPEN_PAREN = /\(/
   CLOSE_PAREN = /\)/
   OP = %r{[+*/-]}
@@ -47,7 +47,7 @@ class Parser
       left = expr
       require(CLOSE_PAREN)
     else
-      left = AST::IVal.new(val: scan(DIGIT).to_i)
+      left = AST::IVal.new(val: scan(INTEGER).to_i)
     end
 
     if match?(OP)
