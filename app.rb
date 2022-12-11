@@ -14,10 +14,15 @@ class Minicomp
     parser = Parser.new(source)
     expr = parser.parse
 
-    visitor = Codgen::StackOpsVisitor.new
-    expr.accept(visitor)
+    visitor1 = Codgen::ExprToStackOpsVisitor.new
+    expr.accept(visitor1)
+    stack_ops = visitor1.ops
 
-    generate_asm(visitor.ops)
+    visitor2 = Codgen::StackOpsToAsmVisitor.new
+    stack_ops.each { _1.accept(visitor2) }
+
+    asm_ops = visitor2.ops
+    generate_asm(asm_ops)
   end
 
   def generate_asm(stack_ops)

@@ -3,7 +3,26 @@
 require "./lib/visitors"
 
 module Codgen
-  class StackOpsVisitor
+  class ExprToStackOpsVisitor
+    attr_reader :ops
+
+    def initialize
+      @ops = []
+    end
+
+    def visit_expr(node)
+      node.left.accept(self)
+      node.right.accept(self)
+
+      @ops << StackOps::Arithmetic.new(op: node.op)
+    end
+
+    def visit_i_val(node)
+      @ops << StackOps::Push.new(val: node.val)
+    end
+  end
+
+  class StackOpsToAsmVisitor
     EVAL_OPCODES = {
       "+" => "add",
       "-" => "sub",
@@ -17,34 +36,48 @@ module Codgen
       @ops = []
     end
 
-    def visit_expr(node)
-      @ops += ["; EVAL: #{node}\n"]
-
-      node.left.accept(self)
-      node.right.accept(self)
-
+    def visit_arithmetic(node)
       @ops += [
-        "; left arg",
-        "ldr x9, [sp]",
+        "ldr x9, [sp]",    # arg 2
         "add sp, sp, #16",
-        "; right arg",
-        "ldr x10, [sp]",
+        "ldr x10, [sp]",   # arg 1
         "add sp, sp, #16",
-        "; do operation",
         "#{EVAL_OPCODES[node.op]} x9, x10, x9",
-        "; write to stack",
         "sub sp, sp, #16",
         "str x9, [sp]",
       ].map { "#{_1}\n" }
     end
 
-    def visit_i_val(node)
-      @ops += ["; EVAL: #{node}\n"]
+    def visit_push(node)
       @ops += [
         "sub sp, sp, #16",      # increment sp
         "mov x9, ##{node.val}", # load immediate
         "str x9, [sp]",         # write to stack
       ].map { "#{_1}\n" }
+    end
+  end
+
+  module StackOps
+    class Base
+      include AcceptsVisitorMixin
+    end
+
+    class Push < Base
+      attr_reader :val
+
+      def initialize(val:)
+        super()
+        @val = val
+      end
+    end
+
+    class Arithmetic < Base
+      attr_reader :op
+
+      def initialize(op:)
+        super()
+        @op = op
+      end
     end
   end
 end
