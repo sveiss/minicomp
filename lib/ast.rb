@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
+require "./lib/visitors"
+
 module AST
   class Node
-    def accept(visitor)
-      raise NotImplementedError, "should be overridden"
-    end
+    include AcceptsVisitorMixin
   end
 
   class Expr < Node
@@ -17,10 +17,6 @@ module AST
       @op = op
     end
 
-    def accept(visitor)
-      visitor.visit_expr(self)
-    end
-
     def to_s = " ( #{left} #{op} #{right} ) "
   end
 
@@ -30,10 +26,6 @@ module AST
     def initialize(val:)
       super()
       @val = val.to_i
-    end
-
-    def accept(visitor)
-      visitor.visit_ival(self)
     end
 
     def to_s = @val.to_s

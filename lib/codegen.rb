@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "./lib/visitors"
+
 module Codgen
   class StackOpsVisitor
     EVAL_OPCODES = {
@@ -36,7 +38,7 @@ module Codgen
       ].map { "#{_1}\n" }
     end
 
-    def visit_ival(node)
+    def visit_i_val(node)
       @ops += ["; EVAL: #{node}\n"]
       @ops += [
         "sub sp, sp, #16",      # increment sp
