@@ -6,6 +6,7 @@ int out_status = 0;
 
 void run_test(int (*sut)(), int expected, const char *name)
 {
+    printf("testing %s\n", name);
     int actual = sut();
     if (actual != expected)
     {

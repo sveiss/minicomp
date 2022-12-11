@@ -41,8 +41,9 @@ class TestHarness
   end
 
   def tc3 = expect(20, Expr.new(left: IVal.new(val: 40), op: "/", right: IVal.new(val: 2)))
+  def tc4 = expect(50, Expr.new(left: IVal.new(val: 55), op: "-", right: IVal.new(val: 5)))
 
-  def tc4 = expect(900, Expr.new(left: IVal.new(val: 10), op: "*", right:
+  def tc5 = expect(900, Expr.new(left: IVal.new(val: 10), op: "*", right:
     Expr.new(left: IVal.new(val: 45), op: "*", right: IVal.new(val: 2))))
 
   private
