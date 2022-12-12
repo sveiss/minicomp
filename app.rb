@@ -12,34 +12,24 @@ class Minicomp
   # expr -> asm source
   def compile(source)
     parser = Parser.new(source)
-
     statement_list = parser.parse
-    stack_ops = generate_stack_ops(statement_list)
-    asm_ops = generate_asm_ops(stack_ops)
 
-    generate_asm(asm_ops)
+    stack_ops_visitor = Codgen::GenerateStackOpsVisitor.new
+    statement_list.accept(stack_ops_visitor)
+    stack_ops = stack_ops_visitor.ops
+    vars = stack_ops_visitor.vars
+
+    asm_ops_visitor = Codgen::GenerateAsmOpsVisitor.new
+    stack_ops.accept(asm_ops_visitor)
+    asm_ops = asm_ops_visitor.ops
+
+    generate_asm(asm_ops, vars.count)
   end
 
-  def generate_stack_ops(statement_list)
-    stack_ops = []
+  def generate_asm(stack_ops, slot_count = 0)
+    neg_slot_bytes = "#-0x" + (slot_count * 16).to_s(16)
+    slot_bytes = "#0x" + (slot_count * 16).to_s(16)
 
-    statement_list.each do |statement|
-      visitor = Codgen::StatementToStackOpsVisitor.new
-      statement.accept(visitor)
-      stack_ops += visitor.ops
-    end
-
-    stack_ops
-  end
-
-  def generate_asm_ops(stack_ops)
-    visitor = Codgen::StackOpsToAsmVisitor.new
-    stack_ops.each { _1.accept(visitor) }
-
-    visitor.ops
-  end
-
-  def generate_asm(stack_ops)
     template = ERB.new(<<~EOF, trim_mode: "%-")
       /* GENERATED AT <%= Time.now %> */
 
@@ -48,9 +38,14 @@ class Minicomp
       .global _<%= @fn %>
 
       _<%= @fn %>:
+        stp fp, lr, [sp, #-0x10]!
+        mov fp, sp
+        add sp, sp, #{neg_slot_bytes}
       <% stack_ops.each do |op| -%>
         <%= op %>
       <% end -%>
+        add sp, sp, #{slot_bytes}
+        ldp fp, lr, [sp], #0x10
         ret
     EOF
 

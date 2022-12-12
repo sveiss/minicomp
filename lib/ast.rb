@@ -7,6 +7,17 @@ module AST
     include AcceptsVisitorMixin
   end
 
+  class StatementList < Node
+    attr_reader :statements
+
+    def initialize(statements:)
+      super()
+      @statements = statements
+    end
+
+    def to_s = statements.map { "#{_1}\n" }
+  end
+
   class ExprStatement < Node
     attr_reader :expr
 
@@ -40,5 +51,39 @@ module AST
     end
 
     def to_s = @val.to_s
+  end
+
+  class VarDefinition < Node
+    attr_reader :variable
+
+    def initialize(variable:)
+      super()
+      @variable = variable
+    end
+
+    def to_s = "int #{variable} ;"
+  end
+
+  class VarAssignment < Node
+    attr_reader :variable, :value
+
+    def initialize(variable:, value:)
+      super()
+      @variable = variable
+      @value = value
+    end
+
+    def to_s = "#{variable} = #{value} ;"
+  end
+
+  class VarReference < Node
+    attr_reader :variable
+
+    def initialize(variable:)
+      super()
+      @variable = variable
+    end
+
+    def to_s = variable.to_s
   end
 end

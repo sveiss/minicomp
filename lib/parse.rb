@@ -14,6 +14,8 @@ class Parser
   OPEN_PAREN = /\(/
   CLOSE_PAREN = /\)/
   OP = %r{[+*/-]}
+  IDENTIFIER = /[a-zA-Z_]+[a-zA-Z_0-9]*/
+  TYPE = /int/
 
   def parse
     statement_list
@@ -27,13 +29,44 @@ class Parser
     statements = []
 
     statements << statement until eos?
-    statements
+    AST::StatementList.new(statements: statements)
   end
 
   def statement
-    ret = expr
+    ret = if match?(TYPE)
+      var_definition
+    elsif match?(IDENTIFIER)
+      # maybe assign or expr (in the real world, solved by assignment being a type of expr...)
+      saved_pos = @s.pos
+      scan(IDENTIFIER)
+      is_assignment = match?("=")
+      @s.pos = saved_pos
+
+      if is_assignment
+        var_assignment
+      else
+        AST::ExprStatement.new(expr: expr)
+      end
+    else
+      AST::ExprStatement.new(expr: expr)
+    end
+
     expect(";")
-    AST::ExprStatement.new(expr: ret)
+
+    ret
+  end
+
+  def var_definition
+    expect(TYPE)
+    identifier = scan(IDENTIFIER)
+    AST::VarDefinition.new(variable: identifier)
+  end
+
+  def var_assignment
+    identifier = scan(IDENTIFIER)
+    expect("=")
+    value = expr
+    AST::VarAssignment.new(variable: identifier, value: value)
   end
 
   def expr
@@ -42,7 +75,12 @@ class Parser
       left = expr
       expect(CLOSE_PAREN)
     else
-      left = AST::IVal.new(val: scan(INTEGER).to_i)
+      left = if match?(INTEGER)
+        AST::IVal.new(val: scan(INTEGER).to_i)
+      elsif match?(IDENTIFIER)
+        AST::VarReference.new(variable: scan(IDENTIFIER))
+      elsif raise ScannerError, "expected INTEGER or IDENTIFIER"
+      end
     end
 
     if match?(OP)
@@ -74,7 +112,7 @@ class Parser
   def expect(needle)
     match = scan(needle)
 
-    raise ScannerError if match.nil?
+    raise ScannerError, "looking for #{needle} at #{@s.pos}" if match.nil?
   end
 
   def eos?

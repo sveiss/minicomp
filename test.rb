@@ -36,6 +36,10 @@ class TestHarness
   def tc4 = expect(50, "55 - 5;")
   def tc5 = expect(900, "10 * (45 * 2);")
   def tc6 = expect(900, "1 ;2 + 23 ; 22222; 10 * (45 * 2);")
+  def tc7 = expect(44, "int a; int b ; a = 22; b = 11; a * 2;")
+  def tc8 = expect(242, "int a; int b ; a = 22; b = 11; a * b;")
+  def tc9 = expect(24, "int a; int b ; a = 22; b = a; b + 2;")
+  def tc10 = expect(267, "int a; a = 22; int b ; b = ((a * 12) + 1); b + 2;")
 
   private
 
