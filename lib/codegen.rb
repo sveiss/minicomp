@@ -68,30 +68,25 @@ module Codgen
     def visit_arithmetic(node)
       @ops += [
         "; arithmetic",
-        "ldr x9, [sp]",    # arg 2
-        "add sp, sp, #0x10",
-        "ldr x10, [sp]",   # arg 1
-        "add sp, sp, #0x10",
+        "ldr x9,  [sp], #0x10",    # arg 2
+        "ldr x10, [sp], #0x10",    # arg 1
         "#{EVAL_OPCODES[node.op]} x9, x10, x9",
-        "add sp, sp, #-0x10",
-        "str x9, [sp]",
+        "str x9, [sp, #-0x10]!",
       ]
     end
 
     def visit_push_immediate(node)
       @ops += [
         "; push_immediate",
-        "add sp, sp, #-0x10",   # increment sp
-        "mov x9, ##{node.val}", # load immediate
-        "str x9, [sp]",         # write to stack
+        "mov x9, ##{node.val}",  # load immediate
+        "str x9, [sp, #-0x10]!", # push to stack
       ]
     end
 
     def visit_pop_as_return_value(node)
       @ops += [
         "; pop_as_return_value",
-        "ldr x0, [sp]",
-        "add sp, sp, #0x10",
+        "ldr x0, [sp], #0x10",
       ]
     end
 
@@ -100,8 +95,7 @@ module Codgen
       frame_offset = "#-0x" + (node.stack_slot * 16).to_s(16)
       @ops += [
         "; pop_as_local_assignment",
-        "ldr x9, [sp]",
-        "add sp, sp, #0x10",
+        "ldr x9, [sp], #0x10",
         "str x9, [fp, #{frame_offset}]",
       ]
     end
@@ -112,8 +106,7 @@ module Codgen
       @ops += [
         "; push_local",
         "ldr x9, [fp, #{frame_offset}]",
-        "add sp, sp, #-0x10",
-        "str x9, [sp]",
+        "str x9, [sp, #-0x10]!",
       ]
     end
   end
