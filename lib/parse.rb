@@ -4,7 +4,9 @@ require "./lib/ast"
 require "strscan"
 
 class Parser
-  class ScannerError < StandardError; end
+  class ScannerError < StandardError
+    attr_accessor :pos
+  end
 
   def initialize(input)
     @s = StringScanner.new(input)
@@ -19,6 +21,10 @@ class Parser
 
   def parse
     statement_list
+  rescue ScannerError => e
+    ne = ScannerError.new("#{e.message} in #{@current_rule} at #{@s.pos}")
+    ne.pos = @s.pos
+    raise ne
   end
 
   private
@@ -26,6 +32,7 @@ class Parser
   # production rules
 
   def statement_list
+    @current_rule = "statement_list"
     statements = []
 
     statements << statement until eos?
@@ -33,6 +40,7 @@ class Parser
   end
 
   def statement
+    @current_rule = "statement"
     ret = if match?(TYPE)
       var_definition
     elsif match?(IDENTIFIER)
@@ -57,12 +65,14 @@ class Parser
   end
 
   def var_definition
+    @current_rule = "var_definition"
     expect(TYPE)
     identifier = scan(IDENTIFIER)
     AST::VarDefinition.new(variable: identifier)
   end
 
   def var_assignment
+    @current_rule = "var_assignment"
     identifier = scan(IDENTIFIER)
     expect("=")
     value = expr
@@ -70,6 +80,7 @@ class Parser
   end
 
   def expr
+    @current_rule = "expr"
     left = nil
     if scan(OPEN_PAREN)
       left = expr
@@ -112,7 +123,7 @@ class Parser
   def expect(needle)
     match = scan(needle)
 
-    raise ScannerError, "looking for #{needle} at #{@s.pos}" if match.nil?
+    raise ScannerError, "looking for #{needle}" if match.nil?
   end
 
   def eos?

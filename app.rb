@@ -24,6 +24,11 @@ class Minicomp
     asm_ops = asm_ops_visitor.ops
 
     generate_asm(asm_ops, vars.count)
+  rescue Parser::ScannerError => pe
+    puts pe.message
+    puts source
+    puts (" " * (pe.pos - 1)) + "^"
+    exit(1)
   end
 
   def generate_asm(stack_ops, slot_count = 0)
