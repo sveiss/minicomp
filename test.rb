@@ -40,6 +40,8 @@ class TestHarness
   def tc8 = expect(242, "int a; int b ; a = 22; b = 11; a * b;")
   def tc9 = expect(24, "int a; int b ; a = 22; b = a; b + 2;")
   def tc10 = expect(267, "int a; a = 22; int b ; b = ((a * 12) + 1); b + 2;")
+  def tc11 = expect(11, "fn abc { 2 * 5; } abc() + 1;")
+  def tc12 = expect(11, "int c; c = def() ; fn def { 2 * 5; } c + 1;")
 
   private
 

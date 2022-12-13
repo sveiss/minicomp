@@ -86,4 +86,27 @@ module AST
 
     def to_s = variable.to_s
   end
+
+  class FnDefinition < Node
+    attr_reader :name, :body
+
+    def initialize(name:, body:)
+      super()
+      @name = name
+      @body = body
+    end
+
+    def to_s = "fn #{name} { #{body} }"
+  end
+
+  class FnCall < Node
+    attr_reader :name, :body
+
+    def initialize(name:)
+      super()
+      @name = name
+    end
+
+    def to_s = "#{name}()"
+  end
 end

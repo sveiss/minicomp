@@ -6,11 +6,12 @@ require "./lib/visitors"
 
 module Codgen
   class GenerateStackOpsVisitor
-    attr_reader :ops, :vars
+    attr_reader :ops, :vars, :fns
 
-    def initialize
+    def initialize(fns: nil)
       @ops = StackOps::List.new([])
       @vars = {}
+      @fns = fns || {}
     end
 
     def visit_statement_list(node)
@@ -48,6 +49,16 @@ module Codgen
 
     def visit_var_reference(node)
       @ops << StackOps::PushLocal.new(stack_slot: @vars[node.variable])
+    end
+
+    def visit_fn_definition(node)
+      visitor = GenerateStackOpsVisitor.new
+      node.body.accept(visitor)
+      @fns[node.name] = visitor
+    end
+
+    def visit_fn_call(node)
+      @ops << StackOps::FnCall.new(name: node.name)
     end
   end
 
@@ -109,6 +120,14 @@ module Codgen
         "str x9, [sp, #-0x10]!",
       ]
     end
+
+    def visit_fn_call(node)
+      @ops += [
+        "; fn_call",
+        "bl _#{node.name}",
+        "str x0, [sp, #-0x10]!",
+      ]
+    end
   end
 
   module StackOps
@@ -157,6 +176,15 @@ module Codgen
       def initialize(op:)
         super()
         @op = op
+      end
+    end
+
+    class FnCall < Base
+      attr_reader :name
+
+      def initialize(name:)
+        super()
+        @name = name
       end
     end
   end

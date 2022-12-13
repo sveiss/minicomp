@@ -18,9 +18,10 @@ class Parser
   OP = %r{[+*/-]}
   IDENTIFIER = /[a-zA-Z_]+[a-zA-Z_0-9]*/
   TYPE = /int/
+  FN = /fn/
 
   def parse
-    statement_list
+    toplevel_list
   rescue ScannerError => e
     ne = ScannerError.new("#{e.message} in #{@current_rule} at #{@s.pos}")
     ne.pos = @s.pos
@@ -31,11 +32,35 @@ class Parser
 
   # production rules
 
+  def toplevel_list
+    statements = []
+
+    statements << toplevel until eos?
+    AST::StatementList.new(statements: statements)
+  end
+
+  def toplevel
+    if match?(FN)
+      function
+    else
+      statement
+    end
+  end
+
+  def function
+    expect(FN)
+    identifier = scan(IDENTIFIER)
+    expect("{")
+    statements = statement_list
+    expect("}")
+    AST::FnDefinition.new(name: identifier, body: statements)
+  end
+
   def statement_list
     @current_rule = "statement_list"
     statements = []
 
-    statements << statement until eos?
+    statements << statement until eos? || match?("}")
     AST::StatementList.new(statements: statements)
   end
 
@@ -86,12 +111,7 @@ class Parser
       left = expr
       expect(CLOSE_PAREN)
     else
-      left = if match?(INTEGER)
-        AST::IVal.new(val: scan(INTEGER).to_i)
-      elsif match?(IDENTIFIER)
-        AST::VarReference.new(variable: scan(IDENTIFIER))
-      elsif raise ScannerError, "expected INTEGER or IDENTIFIER"
-      end
+      left = term
     end
 
     if match?(OP)
@@ -101,6 +121,21 @@ class Parser
       AST::Expr.new(left: left, op: op, right: right)
     else
       left
+    end
+  end
+
+  def term
+    if match?(INTEGER)
+      AST::IVal.new(val: scan(INTEGER).to_i)
+    elsif match?(IDENTIFIER)
+      identifier = scan(IDENTIFIER)
+      if match?("()")
+        expect("()")
+        AST::FnCall.new(name: identifier)
+      else
+        AST::VarReference.new(variable: identifier)
+      end
+    elsif raise ScannerError, "expected INTEGER or IDENTIFIER"
     end
   end
 
